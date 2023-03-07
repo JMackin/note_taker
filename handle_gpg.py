@@ -72,6 +72,8 @@ def decrypt_it(input_str: str, passwd_file=None, outfile_name=None):
                 if outfile_name is not None:
                     decrypt_out = gpg.decrypt_file(input_str, passphrase=passwd.read(), output=f'decrypted_out/{outfile_name}.txt')
                     print(f'Success?:{decrypt_out.ok}')
+
+                    print(decrypt_out.status)
                 # IF NO OUTPUT FILENAME
                 else:
                     decrypt_out = gpg.decrypt_file(input_str, passphrase=passwd.read())
@@ -83,6 +85,7 @@ def decrypt_it(input_str: str, passwd_file=None, outfile_name=None):
             if outfile_name is not None:
                 decrypt_out = gpg.decrypt_file(input_str, output=f'decrypted_out/{outfile_name}.txt')
                 print(f'Success?:{decrypt_out.ok}')
+                print({decrypt_out.status})
             # IF NO OUTPUT FILENAME
             else:
                 decrypt_out = gpg.decrypt_file(input_str)
