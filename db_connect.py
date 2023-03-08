@@ -21,7 +21,7 @@ def make_connection(db_name: str, usr: str):
 
 # PARMS (PARAMETER) MUST BE TUPLE OR DICT
 # PARAMETERS ARE PASSED INTO PLACEHOLDER TAGS ( "%s" ) IN THE QUERY STRING
-def execute_query(conn, query: str, parms=None):
+def execute_query(conn, query: str, return_result: bool = False, parms=None):
 
     with conn.cursor() as cur:
         if parms is not None:
@@ -29,13 +29,17 @@ def execute_query(conn, query: str, parms=None):
         else:
             cur.execute(query)
 
+        # RETURN ALL RESULTS AS TUPLE (OR LIST?)
+        if return_result:
+            return cur.fetchall()
+
 
 # PARAMETERS:
 #   columns : dict{}
 #   prim_key : str
 #   foreign_keys : dict{}
 #   col_options : dict{key:list[]} i.e. {"col_name": ['opt1', 'opt2', ...]}
-def make_table(columns: dict, tabl_name: str, conn, prim_key: str = None, foreign_keys: dict = None, col_options: dict = None):
+def make_table(columns: dict, tabl_name: str, prim_key: str = None, foreign_keys: dict = None, col_options: dict = None):
 
     # COLUMN DEFINITION CONSTRUCTION
     for cn, dt in columns.items():
@@ -60,11 +64,25 @@ def make_table(columns: dict, tabl_name: str, conn, prim_key: str = None, foreig
         )""")\
         .format(
         table=sql.Identifier(tabl_name),
-        full_col=sql.SQL(', ').join([sql.Composed([sql.Identifier(cn), sql.SQL(f" {dt}")]) for cn, dt in columns.items()]))
+        full_col=sql.SQL(', ').join([sql.Composed([sql.Identifier(cn), sql.SQL(f" {dt}")]) for cn, dt in columns.items()])
+        )
 
-    # EXECUTE QUERY AND COMMIT CHANGES
-    with conn.cursor() as cur:
-        cur.execute(tabl)
-        conn.commit()
+    return tabl
 
 
+def get_table_info(conn, tabl_name: str):
+
+    query = sql.SQL("""
+        SELECT column_name FROM information_schema.columns
+        WHERE table_schema = 'public'
+        AND table_name = {table}
+    """)\
+        .format(
+        table=sql.Literal('testtbl1')
+        )
+
+    return execute_query(conn, query, return_result=True)
+
+
+def make_insert():
+    print("TODO")
