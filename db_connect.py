@@ -36,6 +36,96 @@ def execute_query(conn, query: str, return_result: bool = False, parms=None):
         conn.commit()
 
 
+def get_table_info(conn, tabl_name: str):
+
+    query = sql.SQL("""
+        SELECT column_name, data_type FROM information_schema.columns
+        WHERE table_schema = 'public'
+        AND table_name = {table}
+    """)\
+        .format(
+        table=sql.Literal(tabl_name)
+        )
+
+    return execute_query(conn, query, return_result=True)
+
+
+# REQUIRES THE USER-DEFINED FUNCTION get_pkey BE DEFINED
+def get_prime_key_col(conn, tabl_name: str):
+
+    query = sql.SQL("""
+        SELECT * from get_pkey({table})
+        """)\
+        .format(
+            table=sql.Literal(tabl_name)
+        )
+
+    pkey_result = execute_query(conn, query, True)
+
+    return str(pkey_result[0][0])
+
+
+def select_by_id(conn, tabl_name, record_id, column_names: list[str] = None):
+
+    pkey = get_prime_key_col(conn, tabl_name)
+    q = make_select_by_id(tabl_name, record_id, pkey, column_names)
+
+    result = execute_query(conn, q, True)
+
+    return result
+
+
+def make_simple_insert(tabl_name: str, values: list, columns: list = None):
+
+    if columns is not None:
+        query = sql.SQL("""
+                INSERT INTO {table} ({}) VALUES ({}) 
+            """) \
+            .format(
+                sql.SQL(', ').join(map(sql.Identifier, columns)),
+                sql.SQL(', ').join(map(sql.Literal, values)),
+                table=sql.Identifier(tabl_name)
+        )
+    else:
+        query = sql.SQL("""
+            INSERT INTO {table} VALUES ({}) 
+        """)\
+            .format(
+                sql.SQL(', ').join(map(sql.Literal, values)),
+                table=sql.Identifier(tabl_name)
+            )
+
+    return query
+
+
+def make_select_by_id(tabl_name: str, record_id: str, pkey_colname: str, column_names: list[str] = None):
+
+
+    if column_names is not None:
+        query = sql.SQL("""
+              SELECT {columns} FROM {table}
+              WHERE {pkey_column} = {id}
+            """)\
+            .format(
+                columns=sql.SQL(', ').join(map(sql.Identifier, column_names)),
+                table=sql.Identifier(tabl_name),
+                pkey_column=sql.Identifier(pkey_colname),
+                id=sql.Literal(record_id)
+            )
+    else:
+        query = sql.SQL("""
+                     SELECT * FROM {table}
+                     WHERE {pkey_column} = {id}
+                   """) \
+            .format(
+            table=sql.Identifier(tabl_name),
+            pkey_column=sql.Identifier(pkey_colname),
+            id=sql.Literal(record_id)
+        )
+
+    return query
+
+
 # PARAMETERS:
 #   columns : dict{}
 #   prim_key : str
@@ -71,39 +161,3 @@ def make_table(columns: dict, tabl_name: str, prim_key: str = None, foreign_keys
 
     return tabl
 
-
-def get_table_info(conn, tabl_name: str):
-
-    query = sql.SQL("""
-        SELECT column_name FROM information_schema.columns
-        WHERE table_schema = 'public'
-        AND table_name = {table}
-    """)\
-        .format(
-        table=sql.Literal(tabl_name)
-        )
-
-    return execute_query(conn, query, return_result=True)
-
-
-def make_simple_insert(tabl_name: str, values: list, columns: list = None):
-
-    if columns is not None:
-        query = sql.SQL("""
-                INSERT INTO {table} ({}) VALUES ({}) 
-            """) \
-            .format(
-            sql.SQL(', ').join(map(sql.Identifier, columns)),
-            sql.SQL(', ').join(map(sql.Literal, values)),
-            table=sql.Identifier(tabl_name)
-        )
-    else:
-        query = sql.SQL("""
-            INSERT INTO {table} VALUES ({}) 
-        """)\
-            .format(
-                sql.SQL(', ').join(map(sql.Literal, values)),
-                table=sql.Identifier(tabl_name)
-            )
-
-    return query
