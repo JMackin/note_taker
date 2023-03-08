@@ -33,7 +33,7 @@ def encrypt_it_file(file: str, usr: str):
 
     with open(file, 'rb') as infile:
         out_stream = gpg.encrypt_file(infile, usr, output=f'./encrypted_out/{outfile_name}')
-        print(f"success?:{out_stream.ok}\nstatus:{out_stream.status}")
+        print(f"Gpg success?:{out_stream.ok}\nstatus:{out_stream.status}")
 
 
 
@@ -48,13 +48,13 @@ def encrypt_it_textstream(intext: str, usr: str, outfile_name=None):
     if outfile_name is not None:
         with open(f'./encrypted_out/{outfile_name}.asc', 'wb') as outf:
             out_stream = gpg.encrypt(intext, usr)
-            print(f"success?:{out_stream.ok}\nstatus:{out_stream.status}")
+            print(f"Gpg success?:{out_stream.ok}\nstatus:{out_stream.status}")
             if out_stream.ok:
                 outf.write(out_stream.data)
         return None
     else:
         out_stream = gpg.encrypt(intext, usr)
-        print(f"success?:{out_stream.ok}")
+        print(f"Gpg success?:{out_stream.ok}")
         if out_stream.ok:
             return out_stream.data
 
@@ -71,25 +71,25 @@ def decrypt_it(input_str: str, passwd_file=None, outfile_name=None):
                 # IF OUTPUT FILENAME IS GIVEN
                 if outfile_name is not None:
                     decrypt_out = gpg.decrypt_file(input_str, passphrase=passwd.read(), output=f'decrypted_out/{outfile_name}.txt')
-                    print(f'Success?:{decrypt_out.ok}')
+                    print(f'Gpg Success?:{decrypt_out.ok}')
 
                     print(decrypt_out.status)
                 # IF NO OUTPUT FILENAME
                 else:
                     decrypt_out = gpg.decrypt_file(input_str, passphrase=passwd.read())
-                    print(f'Success?:{decrypt_out.ok}')
+                    print(f'Gpg Success?:{decrypt_out.ok}')
                     return decrypt_out
         # IF NO PASSWORD SUPPLIED
         else:
             # IF OUTPUT FILENAME IS GIVEN
             if outfile_name is not None:
                 decrypt_out = gpg.decrypt_file(input_str, output=f'decrypted_out/{outfile_name}.txt')
-                print(f'Success?:{decrypt_out.ok}')
+                print(f'Gpg Success?:{decrypt_out.ok}')
                 print({decrypt_out.status})
             # IF NO OUTPUT FILENAME
             else:
                 decrypt_out = gpg.decrypt_file(input_str)
-                print(f'Success?:{decrypt_out.ok}')
+                print(f'Gpg Success?:{decrypt_out.ok}')
                 return decrypt_out
     # IF INPUT IS A TEXT STRING
     else:
@@ -99,21 +99,21 @@ def decrypt_it(input_str: str, passwd_file=None, outfile_name=None):
                 # IF OUTPUT FILENAME IS GIVEN
                 if outfile_name is not None:
                     decrypt_out = gpg.decrypt(input_str, passphrase=passwd.read(), output=f'decrypted_out/{outfile_name}.txt')
-                    print(f'Success?:{decrypt_out.ok}')
+                    print(f'Gpg Success?:{decrypt_out.ok}')
                 # IF NO OUTPUT FILENAME
                 else:
                     decrypt_out = gpg.decrypt(input_str, passphrase=passwd.read())
-                    print(f'Success?:{decrypt_out.ok}')
+                    print(f'Gpg Success?:{decrypt_out.ok}')
                     return decrypt_out
         # IF NO PASSWORD SUPPLIED
         else:
             # IF OUTPUT FILENAME IS GIVEN
             if outfile_name is not None:
                 decrypt_out = gpg.decrypt(input_str, output=f'decrypted_out/{outfile_name}.txt')
-                print(f'Success?:{decrypt_out.ok}')
+                print(f'Gpg Success?:{decrypt_out.ok}')
             # IF NO OUTPUT FILENAME
             else:
                 decrypt_out = gpg.decrypt(input_str)
-                print(f'Success?:{decrypt_out.ok}')
+                print(f'Gpg Success?:{decrypt_out.ok}')
                 return decrypt_out
 
