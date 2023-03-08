@@ -33,6 +33,8 @@ def execute_query(conn, query: str, return_result: bool = False, parms=None):
         if return_result:
             return cur.fetchall()
 
+        conn.commit()
+
 
 # PARAMETERS:
 #   columns : dict{}
@@ -78,11 +80,30 @@ def get_table_info(conn, tabl_name: str):
         AND table_name = {table}
     """)\
         .format(
-        table=sql.Literal('testtbl1')
+        table=sql.Literal(tabl_name)
         )
 
     return execute_query(conn, query, return_result=True)
 
 
-def make_insert():
-    print("TODO")
+def make_simple_insert(tabl_name: str, values: list, columns: list = None):
+
+    if columns is not None:
+        query = sql.SQL("""
+                INSERT INTO {table} ({}) VALUES ({}) 
+            """) \
+            .format(
+            sql.SQL(', ').join(map(sql.Identifier, columns)),
+            sql.SQL(', ').join(map(sql.Literal, values)),
+            table=sql.Identifier(tabl_name)
+        )
+    else:
+        query = sql.SQL("""
+            INSERT INTO {table} VALUES ({}) 
+        """)\
+            .format(
+                sql.SQL(', ').join(map(sql.Literal, values)),
+                table=sql.Identifier(tabl_name)
+            )
+
+    return query

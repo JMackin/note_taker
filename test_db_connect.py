@@ -16,6 +16,9 @@ conn = dbconn.make_connection('dbajlm', 'dbajlm')
 
 print(dbconn.get_table_info(conn, 'testtbl1'))
 
+insert_query = dbconn.make_simple_insert('testtbl1', [8, "atitle", "now()"])
+dbconn.execute_query(conn, insert_query)
+
 # CLOSE CONNECTION
 conn.close()
 del conn
