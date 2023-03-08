@@ -12,3 +12,4 @@ dbconn.make_table({'id': 'integer', 'title': 'varchar(10)', 'date_did': 'date'},
 
 # CLOSE CONNECTION
 conn.close()
+del conn

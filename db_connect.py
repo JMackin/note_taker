@@ -11,12 +11,12 @@ def make_connection(db_name: str, usr: str):
 
     # connect to existing db
     conn = psycopg.connect(conninfo=f"host=localhost port=5432 dbname={db_name} user={usr} password={passwd.data.decode('ascii')}")
+    del passwd
     # open cursor for db ops
     print(conn.info.status)
     print(f"{conn.info.user}@{conn.info.host} on {conn.info.dbname}")
 
     return conn
-
 
 
 # PARMS (PARAMETER) MUST BE TUPLE OR DICT
@@ -37,6 +37,7 @@ def execute_query(conn, query: str, parms=None):
 #   col_options : dict{key:list[]} i.e. {"col_name": ['opt1', 'opt2', ...]}
 def make_table(columns: dict, tabl_name: str, conn, prim_key: str = None, foreign_keys: dict = None, col_options: dict = None):
 
+    # COLUMN DEFINITION CONSTRUCTION
     for cn, dt in columns.items():
 
         if col_options is not None:
@@ -52,6 +53,7 @@ def make_table(columns: dict, tabl_name: str, conn, prim_key: str = None, foreig
             dt = f"{dt} PRIMARY KEY"
             columns[cn] = dt
 
+    # TABLE DEFINITION CONSTRUCTION
     tabl = sql.SQL("""
         CREATE TABLE {table} (
             {full_col}
@@ -60,6 +62,7 @@ def make_table(columns: dict, tabl_name: str, conn, prim_key: str = None, foreig
         table=sql.Identifier(tabl_name),
         full_col=sql.SQL(', ').join([sql.Composed([sql.Identifier(cn), sql.SQL(f" {dt}")]) for cn, dt in columns.items()]))
 
+    # EXECUTE QUERY AND COMMIT CHANGES
     with conn.cursor() as cur:
         cur.execute(tabl)
         conn.commit()
