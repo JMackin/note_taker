@@ -1,0 +1,3 @@
+An app that encrypts things, read files, and stores them in a DB.
+
+So far uses PostgreSQL, and GPG.
