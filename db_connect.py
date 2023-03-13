@@ -65,7 +65,7 @@ def get_prime_key_col(conn, tabl_name: str):
     return str(pkey_result[0][0])
 
 
-def select_by_id(conn, tabl_name, record_id, column_names: list[str] = None):
+def select_by_id(conn, tabl_name: str, record_id, column_names: list[str] = None):
 
     pkey = get_prime_key_col(conn, tabl_name)
     q = make_select_by_id(tabl_name, record_id, pkey, column_names)

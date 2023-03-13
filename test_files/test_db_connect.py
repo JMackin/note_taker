@@ -25,7 +25,8 @@ conn = dbconn.make_connection('dbajlm', 'dbajlm')
 
 # print(dbconn.execute_query(conn, q, True))
 
-print(dbconn.select_by_id(conn, 'testtbl1', 6, ["title", "date_did"]))
+print(dbconn.select_by_id(conn, 'misc_blobs', 13, ['notes']))
+
 
 # CLOSE CONNECTION
 conn.close()
