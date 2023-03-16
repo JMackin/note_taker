@@ -4,7 +4,8 @@ import os
 
 def start_gpg():
 
-    gpg = gnupg.GPG(gnupghome="/home/ujlm/.gnupg")
+
+    gpg = gnupg.GPG(gnupghome="~/.gnupg")
 
     if not os.path.exists('./encrypted_out/'):
         os.mkdir('./encrypted_out')
