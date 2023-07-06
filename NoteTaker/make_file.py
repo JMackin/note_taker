@@ -1,21 +1,30 @@
+import io
 import os
+
 
 class FileMaker:
 
-    def __init__(self, subject: str, title: str, content: str, tag_set: set = None):
-        self.subject = subject
-        self.title = title
-        self.content = content
-        if tag_set is not None:
-            self.tag_set = tag_set
+    def __init__(self, jlmnote):
+        # JlmNote.note_attrs = {'timestamp': self.ts, 'title': self.title, 'subject': self.subject, 'tags': self.tags}
+        attrs = jlmnote.get_attrs()
+        self.subject = attrs['timestamp']
+        self.title = attrs['title']
+        self.content = attrs['content']
+        self.iscmd = attrs['iscmd']
+        self.tag_set = attrs['tag_set']
 
+    def write_to_file(self):
 
-    def open_write_file(self):
-        file_stream = open(self.title)
+        with open(os.fspath(str(self.title + '.jlmtxt')), 'w') as fo:
+            fo.write(str(self.content))
 
+    def setisCmd(self, iscmd):
+        self.iscmd = iscmd
+
+    def get_is_cmd(self):
+        return True if self.isCmd else False
 
     def add_tags(self, *tags):
-        s_tag = self.note_tags.get()
+        pass
 
-        if s_tag not in self.note_tags.get():
-            pass
+    

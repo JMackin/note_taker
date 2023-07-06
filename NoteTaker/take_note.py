@@ -1,18 +1,22 @@
 import os
-from NoteTaker import make_file as mkf
+from NoteTaker import orchestrate
 import subprocess
+from dotenv import load_dotenv
 import datetime
 import tkinter as tk
 from tkinter import ttk
 
 
+wndw_master = tk.Tk()
 
 class NoteTaker(tk.Frame):
-
-    def __init__(self, master, nowdate: datetime, title: str, subjects: tuple, subject: str, tag_set: set):
+    def __init__(self, master, dt: tuple, title: str, subjects: tuple, subject: str, tag_set: set, jlmnote):
         super().__init__(master)
 
         # 3x5 grid
+
+        #
+        self.jlmnote = jlmnote
 
         top = self.winfo_toplevel()
         top.rowconfigure(0, weight=1)
@@ -35,9 +39,10 @@ class NoteTaker(tk.Frame):
 
         self.chosen_subject = subject
         self.note_title = title
+        self.note_content = ""
 
-        now = nowdate.now()
-        self.now_stamp = nowdate.strftime(now, "%d%m%y-%H%M%S")
+        #now = dt.now()
+        self.now_stamp = dt
 
         label_txt = f"Note: {self.note_title}"
         label_txt_sbj = f"Subject:"
@@ -82,13 +87,13 @@ class NoteTaker(tk.Frame):
         child_frame = ttk.Frame()
         #Entry entry
         self.entry_txt = tk.StringVar()
-        self.entry = ttk.Entry(self.master, justify="left", exportselection=True, textvariable=self.entry_txt)
-        self.entry.bind('<Key-Return>', self.submit_entry)
+        self.entry = ttk.Entry(self.master, justify="left", textvariable=self.entry_txt, exportselection=True)
+        self.entry.bind('<Key-Return>', self.pass_to_maker)
         self.entry.grid_rowconfigure(index=5, weight=3)
         self.entry.grid_columnconfigure(index=2, weight=3)
         self.entry.grid(column=0, row=5, columnspan=4, rowspan=3, padx=5, pady=7, sticky=tk.N+tk.E+tk.S+tk.W, in_=self.frame)
 
-        self.lastline = ttk.Button(self.master, text="Save", command=)
+        self.lastline = ttk.Button(self.master, text="Save", command=self.pass_to_maker)
         self.lastline.grid(column=2, row=8, padx=5, pady=5, in_=self.frame)
 
         ### DEBUGGING
@@ -102,9 +107,15 @@ class NoteTaker(tk.Frame):
         [print(i) for i in cmdlst]
         ###
 
-    def submit_entry(self, event):
+    def pass_to_maker(self, event=None):
 
-        recv_entry(str(self.entry_txt))
+        self.note_content = (str(self.entry_txt.get()))
+        recv_entry(self.note_content, self.jlmnote)
+        recv_subj(str(self.chosen_subject), self.jlmnote)
+        recv_title(str(self.note_title), self.jlmnote)
+        recv_tags(self.tag_set_CV, self.jlmnote)
+
+        wndw_master.destroy()
 
     def selected_tags(self, event):
 
@@ -126,7 +137,6 @@ class NoteTaker(tk.Frame):
         self.label_t_chs.__setitem__('text', f"> {self.tag_set_CV.__str__().strip('{}')}")
         print(str(self.tag_set_CV))
 
-
     def selected_subject(self, event):
 
         if self.chosen_subject == '':
@@ -141,10 +151,48 @@ class NoteTaker(tk.Frame):
             print(str(self.chosen_subject))
 
 
-def make_note(title: str = None, subject: str = None, *tags):
-    dt = datetime
-    dtnow = dt.datetime.now()
-    now_stamp = dt.datetime.strftime(dtnow, '%d%m%y-%H%M%S')
+class JlmNote:
+    def __init__(self, now_stamp):
+        self.ts = now_stamp
+        self.title = ""
+        self.subject = ""
+        self.content = ""
+        self.tags = set()
+        self.iscmd = False
+        self.note_attrs = {}
+        self.update_attrs()
+
+    def set_title(self, title: str):
+        self.title = title
+        self.note_attrs['title'] = self.title
+
+    def set_content(self, entry: str):
+        self.content = entry
+        self.note_attrs['content'] = self.content
+
+    def set_subject(self, subject: str):
+        self.subject = subject
+        self.note_attrs['subject'] = self.subject
+
+    def set_tags(self, tags: set):
+        self.tags = (self.tags | tags) if (self.tags - tags) else (self.tags - (self.tags-tags))
+        self.note_attrs['tags'] = self.tags
+
+    def set_iscmd(self, iscmd: bool):
+        self.iscmd = iscmd
+        self.note_attrs['iscmd'] = self.iscmd
+
+    def update_attrs(self):
+        self.note_attrs = {'timestamp': self.ts, 'title': self.title, 'content': self.content,
+                           'subject': self.subject, 'tags': self.tags, 'iscmd': self.iscmd}
+
+    def get_attrs(self):
+        return self.note_attrs
+
+
+def make_note_gui(jlmnote, *tags, ts: tuple, title: str = None, subject: str = None):
+    now_stamp = ts[1]
+    dt = ts[0]
 
     if subject is None:
         subject = "Misc"
@@ -155,36 +203,47 @@ def make_note(title: str = None, subject: str = None, *tags):
     else:
         tag_set = {'', }
 
-    wndw_master = tk.Tk()
-    app_win = NoteTaker(wndw_master, dt.datetime, title, get_subjects(), subject, tag_set)
+    app_win = NoteTaker(wndw_master, dt, title, get_subjects(), subject, tag_set, jlmnote)
     app_win.master.winfo_geometry()
-
     app_win.mainloop()
 
 
+def build_jlmnote(now_stamp):
+
+    jlmnote = JlmNote(now_stamp)
+
+    return jlmnote
+
+
+def handoff(jlmnote):
+
+    pass
+
 def get_subjects():
 
-    with open(os.getenv('SUBJECTS_FILE'), 'r') as sbjct_f:
+    with open(os.getenv('SUBJ_FILE'), 'r') as sbjct_f:
         subs = tuple((i.strip() for i in sbjct_f.readlines()))
         return subs
 
 
 def update_tags(new_tags):
-    with open(os.getenv('TAGS_FILE'), 'r') as tags_f:
-        tags = set((j.strip() for j in tags_f.readlines()))
+    with open(os.getenv('TAGS_FILE'), 'r+') as tags_f:
+        tags = set((i.strip() for i in tags_f.readlines()))
+        tags.update(new_tags)
+        tags_f.writelines(i for i in tags)
 
 
-def recv_entry(entry: str):
-    pass
+def recv_entry(entry: str, jlmnote: JlmNote):
+    jlmnote.set_content(entry)
 
-def recv_title(title: str):
-    pass
 
-def recv_subj(subj: str):
-    pass
+def recv_title(title: str, jlmnote: JlmNote):
+    jlmnote.set_title(title)
 
-def recv_tags(tags: tuple):
-    pass
 
-def submit_entry(entry: str, title: str):
-    pass
+def recv_subj(subj: str, jlmnote: JlmNote):
+    jlmnote.set_subject(subj)
+
+
+def recv_tags(tags: set, jlmnote: JlmNote):
+    jlmnote.set_tags(tags)
